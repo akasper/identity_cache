@@ -26,27 +26,10 @@ module ActiveRecord
 
     attr_reader :association_cache
 
-    def association(name) #:nodoc:
-      association = association_instance_get(name)
-
-      if association.nil?
-        reflection  = self.class.reflect_on_association(name)
-        association = reflection.association_class.new(self, reflection)
-        association_instance_set(name, association)
-      end
-
-      association
-    end
-
     private
-      # Returns the specified association instance if it responds to :loaded?, nil otherwise.
-      def association_instance_get(name)
-        @association_cache[name]
-      end
-
       # Set the specified association instance.
-      def association_instance_set(name, association)
-        @association_cache[name] = association
+      def delete_from_cache(name)
+        instance_variable_set "@#{name}", nil
       end
     end
 end
