@@ -1,6 +1,16 @@
+require 'identity_cache/active_record_extension'
+
 module IdentityCache
   module QueryAPI
     extend ActiveSupport::Concern
+
+    def initialize_attributes(attributes, options = {}) #:nodoc:
+      attributes
+    end
+
+    def encode_with(coder)
+      coder['attributes'] = self.attributes
+    end
 
     included do |base|
       base.private_class_method :require_if_necessary
@@ -18,6 +28,17 @@ module IdentityCache
     end
 
     module ClassMethods
+
+      def inverse_reflection_for(record, reflection)
+        reflection.inverse_of
+      end
+
+      def set_inverse_instance(record, reflection)
+        if record && inverse_reflection_for(record, reflection)
+          inverse = record.association(inverse_reflection_for(record, reflection).name)
+          inverse.target = owner
+        end
+      end
       # Similar to ActiveRecord::Base#exists? will return true if the id can be
       # found in the cache or in the DB.
       def exists_with_identity_cache?(id)
@@ -114,8 +135,8 @@ module IdentityCache
         elsif (reflection = record.class.reflect_on_association(association_name)).collection?
           association = reflection.association_class.new(record, reflection)
           association.target = coder_or_array.map {|e| record_from_coder(e) }
-          association.target.each {|e| association.set_inverse_instance(e) }
-          association.proxy
+          association.target.each {|e| association.set_inverse_instance(e, reflection) }
+          #association.proxy
         else
           record_from_coder(coder_or_array)
         end
