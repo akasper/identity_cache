@@ -2,13 +2,13 @@ require "test_helper"
 
 class SchemaChangeTest < IdentityCache::TestCase
   class AddColumnToChild < ActiveRecord::Migration
-    def up
+    def self.up
       add_column :associated_records, :shiny, :string
     end
   end
 
   class AddColumnToDeepChild < ActiveRecord::Migration
-    def up
+    def self.up
       add_column :deeply_associated_records, :new_column, :string
     end
   end
@@ -53,7 +53,7 @@ class SchemaChangeTest < IdentityCache::TestCase
     record = Record.fetch(@record.id)
     record.fetch_associated
 
-    AddColumnToChild.new.up
+    AddColumnToChild.up
     read_new_schema
 
     Record.expects(:resolve_cache_miss).returns(@record)
@@ -65,7 +65,7 @@ class SchemaChangeTest < IdentityCache::TestCase
     associated_record_from_cache = record.fetch_associated
     associated_record_from_cache.fetch_deeply_associated_records
 
-    AddColumnToDeepChild.new.up
+    AddColumnToDeepChild.up
     read_new_schema
 
     Record.expects(:resolve_cache_miss).returns(@record)
