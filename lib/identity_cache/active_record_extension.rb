@@ -21,6 +21,29 @@ module ActiveRecord
 end
 
 module ActiveRecord
+  # = Active Record Reflection
+  module Reflection # :nodoc:
+    extend ActiveSupport::Concern
+
+    class AssociationReflection < MacroReflection
+      def foreign_key
+        @foreign_key ||= options[:foreign_key] || derive_foreign_key
+      end
+
+      def derive_foreign_key
+        if belongs_to?
+          "#{name}_id"
+        elsif options[:as]
+          "#{options[:as]}_id"
+        else
+          active_record.name.foreign_key
+        end
+      end
+    end
+  end
+end
+
+module ActiveRecord
   module Associations
     extend ActiveSupport::Concern
 
